@@ -1,5 +1,4 @@
-from ast import Bytes
-#from network.connection import Connection
+
 from datastream.bytestream import ByteStream
 
 class PiranhaMessage:
