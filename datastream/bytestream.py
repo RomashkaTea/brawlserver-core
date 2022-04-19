@@ -25,3 +25,6 @@ class ByteStream:
     
     def writeByte(self, value:int):
         self.writeBytesLength(int.to_bytes(value, 1, "big"))
+    
+    def writeVInt(self, value:int):
+        pass # а сами сделайте.
