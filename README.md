@@ -10,3 +10,5 @@ An open source brawl server core!
 
 ## How to play
 - This is a core of server. You need to implement all messages and logic by yourself 🙃
+
+![screenshot](/screens/console.png?raw=true)
