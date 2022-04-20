@@ -1,8 +1,7 @@
 
 class BitStream:
-    def __init__(self, buff=None):
-        if buff is None: self.buffer = bytearray(b'')
-        else: self.buffer = buff
+    def __init__(self, buff=b''):
+        self.buffer = buff
         self.bitIndex = 0
         self.offset = 0
     
