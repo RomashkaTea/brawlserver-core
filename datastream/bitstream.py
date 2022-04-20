@@ -1,3 +1,4 @@
+# this bitstream by xeondev1337
 
 class BitStream:
     def __init__(self, buff=b''):
