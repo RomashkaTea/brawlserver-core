@@ -29,9 +29,7 @@ class ByteStream:
         length = self.readInt()
         if length < 0 and length > max:
             return None
-        string_bytes = self.buffer[self.offset:self.offset+length]
-        self.offset += length
-        return string_bytes.decode("utf-8")
+        return self.readBytes(length).decode("utf-8")
 
     def writeBytes(self, array):
         self.bitIdx = 0
