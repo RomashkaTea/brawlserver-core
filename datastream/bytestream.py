@@ -56,6 +56,48 @@ class ByteStream:
  
         self.bitIdx = (self.bitIdx + 1) & 7
 
+    def convert_unsigned_to_signed(unsigned:int): # python is dudnik lang :upside_down: 
+        return int.from_bytes(int.to_bytes(unsigned, 4, "big"), "big", signed=True)
+
+    def readVInt(self):
+        byte = self.readByte()
+
+        if (byte & 0x40) != 0:
+            result = byte & 0x3f
+            if (byte & 0x80) != 0:
+                byte = self.readByte()
+                result |= (byte & 0x7f) << 6
+                if (byte & 0x80) != 0:
+                    byte = self.readByte() 
+                    result |= (byte & 0x7f) << 13
+                    if (byte & 0x80) != 0:
+                        byte = self.readByte()
+                        result |= (byte & 0x7f) << 20
+                        if (byte & 0x80) != 0:
+                            byte = self.readByte()
+                            result |= (byte & 0x7f) << 27
+                            return ByteStream.convert_unsigned_to_signed(result | 0x80000000)
+                        return ByteStream.convert_unsigned_to_signed(result | 0xF8000000)
+                    return ByteStream.convert_unsigned_to_signed(result | 0xFFF00000)
+                return ByteStream.convert_unsigned_to_signed(result | 0xFFFFE000)
+            return ByteStream.convert_unsigned_to_signed(result | 0xFFFFFFC0)
+        else:
+            result = byte & 0x3f
+
+            if (byte & 0x80) != 0:
+                byte = self.readByte()
+                result |= (byte & 0x7f) << 6
+                if (byte & 0x80) != 0:
+                    byte = self.readByte()
+                    result |= (byte & 0x7f) << 13
+                    if (byte & 0x80) != 0:
+                        byte = self.readByte()
+                        result |= (byte & 0x7f) << 20
+                        if (byte & 0x80) != 0:
+                            byte = self.readByte()
+                            result |= (byte & 0x7f) << 27
+            return result
+    
     def writeVInt(self, value:int):
         tmp = (value >> 25) & 0x40
         flipped = value ^ (value >> 31)
