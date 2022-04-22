@@ -56,5 +56,24 @@ class ByteStream:
  
         self.bitIdx = (self.bitIdx + 1) & 7
 
-    def writeVInt(self, value:int):
-        pass # а сами сделайте.
+def writeVInt(self, value:int):
+        tmp = (value >> 25) & 0x40
+        flipped = value ^ (value >> 31)
+
+        tmp |= value & 0x3F
+        value >>= 6
+
+        flipped = flipped >> 6
+
+        if flipped == 0:
+            self.writeByte(tmp)
+            return
+        
+        self.writeByte(tmp | 0x80)
+
+        self.writeByte(value & 0x7F)
+        value = value >> 7
+
+        while flipped != 0:
+            self.writeByte(value & 0x7F)
+            value = value >> 7
