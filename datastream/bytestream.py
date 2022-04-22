@@ -56,7 +56,7 @@ class ByteStream:
  
         self.bitIdx = (self.bitIdx + 1) & 7
 
-def writeVInt(self, value:int):
+    def writeVInt(self, value:int):
         tmp = (value >> 25) & 0x40
         flipped = value ^ (value >> 31)
 
