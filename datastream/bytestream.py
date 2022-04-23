@@ -19,7 +19,7 @@ class ByteStream:
 
     def readBoolean(self):
         if self.bitIdx == 0:
-            self.currentByte = self.buffer[self.offset]
+            self.currentByte = self.readByte()
         
         result = ((1 << self.bitIdx) & self.currentByte) != 0
         self.bitIdx = (self.bitIdx + 1) & 7
