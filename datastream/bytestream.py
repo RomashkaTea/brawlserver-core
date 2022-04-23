@@ -12,14 +12,16 @@ class ByteStream:
         return array
     
     def readByte(self):
+        self.bitIdx = 0
         return int.from_bytes(self.readBytes(1), "big", signed=True)
 
     def readInt(self):
+        self.bitIdx = 0
         return int.from_bytes(self.readBytes(4), "big")
 
     def readBoolean(self):
         if self.bitIdx == 0:
-            self.currentByte = self.readByte()
+            self.currentByte = int.from_bytes(self.readBytes(1), "big", signed=True)
         
         result = ((1 << self.bitIdx) & self.currentByte) != 0
         self.bitIdx = (self.bitIdx + 1) & 7
