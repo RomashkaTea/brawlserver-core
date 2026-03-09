@@ -7,7 +7,7 @@ class ClientHelloMessage(PiranhaMessage):
         self.id = 10100
     
     def decode(self):
-        pass # decode
+        pass # decode by yourself
 
-    def process(self, con):
-        con.messaging.send_message(ServerHelloMessage())
+    async def process(self, con):
+        await con.messaging.send_message(ServerHelloMessage())

@@ -3,80 +3,95 @@ class ByteStream:
     def __init__(self, buffer=b''):
         self.buffer = bytearray(buffer)
         self.offset = 0
-        self.bitIdx = 0
-        self.currentByte = 0
+        self.bit_idx = 0
     
-    def readBytes(self, length):
+    def read_bytes(self, length):
         array = self.buffer[self.offset:self.offset+length]
         self.offset += length
         return array
     
-    def readByte(self):
-        self.bitIdx = 0
-        return int.from_bytes(self.readBytes(1), "big", signed=True)
+    def read_byte(self):
+        self.bit_idx = 0
+        return int.from_bytes(self.read_bytes(1), "big", signed=True)
 
-    def readInt(self):
-        self.bitIdx = 0
-        return int.from_bytes(self.readBytes(4), "big")
+    def read_int16(self):
+        self.bit_idx = 0
+        return int.from_bytes(self.read_bytes(2), "big")
 
-    def readBoolean(self):
-        if self.bitIdx == 0:
-            self.currentByte = int.from_bytes(self.readBytes(1), "big", signed=True)
-        
-        result = ((1 << self.bitIdx) & self.currentByte) != 0
-        self.bitIdx = (self.bitIdx + 1) & 7
+    def read_int24(self):
+        self.bit_idx = 0
+        return int.from_bytes(self.read_bytes(3), "big")
+
+    def read_int(self):
+        self.bit_idx = 0
+        return int.from_bytes(self.read_bytes(4), "big")
+
+    def read_boolean(self):
+        if self.bit_idx == 0:
+            self.offset += 1
+
+        result = (self.buffer[self.offset - 1] & (1 << self.bit_idx)) != 0
+        self.bit_idx = (self.bit_idx + 1) & 7
         return result
 
-    def readString(self, max=900000):
-        length = self.readInt()
+    def read_string(self, max=900000):
+        length = self.read_int()
         if length < 0 and length > max:
             return None
-        return self.readBytes(length).decode("utf-8")
+        return self.read_bytes(length).decode("utf-8")
 
-    def writeBytes(self, array):
-        self.bitIdx = 0
+    def write_bytes(self, array):
+        self.bit_idx = 0
         self.buffer += array
         self.offset += len(array)
     
-    def writeInt(self, value:int):
-        self.writeBytes(int.to_bytes(value, 4, "big"))
-    
-    def writeByte(self, value:int):
-        self.writeBytes(int.to_bytes(value, 1, "big"))
-    
-    def writeString(self, value:str):
-        array = value.encode("utf-8")
-        self.writeInt(len(array))
-        self.writeBytes(array)
+    def write_int16(self, value:int):
+        self.write_bytes(int.to_bytes(value, 2, "big"))
 
-    def writeBoolean(self, value:bool):
-        if self.bitIdx == 0:
+    def write_int24(self, value:int):
+        self.write_bytes(int.to_bytes(value, 3, "big"))
+
+    def write_int(self, value:int):
+        self.write_bytes(int.to_bytes(value, 4, "big"))
+    
+    def write_byte(self, value:int):
+        self.write_bytes(int.to_bytes(value, 1, "big"))
+    
+    def write_string(self, value:str):
+        array = value.encode("utf-8")
+        self.write_int(len(array))
+        self.write_bytes(array)
+
+    def write_boolean(self, value:bool):
+        if self.bit_idx == 0:
             self.buffer += bytearray(1) # ensure
+            self.offset += 1
         
         if value:
-            self.buffer[self.offset] |= (1 << self.bitIdx)
+            self.buffer[self.offset - 1] |= (1 << self.bit_idx)
  
-        self.bitIdx = (self.bitIdx + 1) & 7
+        self.bit_idx = (self.bit_idx + 1) & 7
 
-    def convert_unsigned_to_signed(unsigned:int): # python is dudnik lang :upside_down: 
+    # there must be a better way to do this
+    def convert_unsigned_to_signed(unsigned:int):
         return int.from_bytes(int.to_bytes(unsigned, 4, "big"), "big", signed=True)
 
-    def readVInt(self):
-        byte = self.readByte()
+    def read_vint(self):
+        byte = self.read_byte()
 
         if (byte & 0x40) != 0:
             result = byte & 0x3f
             if (byte & 0x80) != 0:
-                byte = self.readByte()
+                byte = self.read_byte()
                 result |= (byte & 0x7f) << 6
                 if (byte & 0x80) != 0:
-                    byte = self.readByte() 
+                    byte = self.read_byte() 
                     result |= (byte & 0x7f) << 13
                     if (byte & 0x80) != 0:
-                        byte = self.readByte()
+                        byte = self.read_byte()
                         result |= (byte & 0x7f) << 20
                         if (byte & 0x80) != 0:
-                            byte = self.readByte()
+                            byte = self.read_byte()
                             result |= (byte & 0x7f) << 27
                             return ByteStream.convert_unsigned_to_signed(result | 0x80000000)
                         return ByteStream.convert_unsigned_to_signed(result | 0xF8000000)
@@ -87,20 +102,20 @@ class ByteStream:
             result = byte & 0x3f
 
             if (byte & 0x80) != 0:
-                byte = self.readByte()
+                byte = self.read_byte()
                 result |= (byte & 0x7f) << 6
                 if (byte & 0x80) != 0:
-                    byte = self.readByte()
+                    byte = self.read_byte()
                     result |= (byte & 0x7f) << 13
                     if (byte & 0x80) != 0:
-                        byte = self.readByte()
+                        byte = self.read_byte()
                         result |= (byte & 0x7f) << 20
                         if (byte & 0x80) != 0:
-                            byte = self.readByte()
+                            byte = self.read_byte()
                             result |= (byte & 0x7f) << 27
             return result
     
-    def writeVInt(self, value:int):
+    def write_vint(self, value:int):
         tmp = (value >> 25) & 0x40
         flipped = value ^ (value >> 31)
 
@@ -109,16 +124,16 @@ class ByteStream:
         flipped >>= 6
 
         if flipped == 0:
-            self.writeByte(tmp)
+            self.write_byte(tmp)
             return
         
-        self.writeByte(tmp | 0x80)
+        self.write_byte(tmp | 0x80)
         flipped >>= 7
         r = 0
         if flipped != 0:
             r = 0x80
            
-        self.writeByte((value & 0x7F) | r)
+        self.write_byte((value & 0x7F) | r)
         value >>= 7
 
         while flipped != 0:
@@ -126,5 +141,9 @@ class ByteStream:
             r = 0
             if flipped != 0:
                     r = 0x80
-            self.writeByte((value & 0x7F) | r)
+            self.write_byte((value & 0x7F) | r)
             value >>= 7
+
+    def set_offset(self, offset: int):
+        self.offset = offset
+        self.bit_idx = 0

@@ -9,4 +9,4 @@ class PiranhaMessage:
     
     def encode(self): pass
     def decode(self): pass
-    def process(self, con): pass
+    async def process(self, con): pass

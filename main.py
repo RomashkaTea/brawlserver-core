@@ -1,3 +1,5 @@
+import asyncio
+
 from network.tcpserver import TcpServer
 
-TcpServer(("0.0.0.0", 9339)).start_accept()
+asyncio.run(TcpServer.main())

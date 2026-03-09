@@ -6,6 +6,6 @@ class ServerHelloMessage(PiranhaMessage):
         self.id = 20100
     
     def encode(self):
-        self.stream.writeInt(24) # session key
-        for i in range(24):
-            self.stream.writeByte(1)
+        self.stream.write_int(24) # session key
+        for i in range(24): # this is not recommended for production, the session key should be random
+            self.stream.write_byte(1)
